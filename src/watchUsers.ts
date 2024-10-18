@@ -1,24 +1,28 @@
-import recordUser from './recordUser.ts';
+import recordUser from "./recordUser.ts";
 
-export default function watchUsers(usersstr: string, output?: string) {
+export default function watchUsers(
+  usersString: string,
+  recording: Recording,
+  output?: string,
+) {
   const watchUsersIter = () => {
-    const users = usersstr.split(' ');
+    console.log("Checking users...");
+    const users = usersString.split(" ");
 
-    const checkUser = (i = 0) => {
-      if (!window.recording[users[i]]) recordUser(users[i], output);
-      else console.log(`Still recording ${users[i]}`);
-      setTimeout(() => {
-        if (i < users.length - 1) checkUser(++i);
-        else
-          console.log(
-            `${new Date().toTimeString().slice(0, 8)}       Waiting for recheck in 3m...\n\n`
-          );
-      }, 3000);
+    const checkUser = async (user: string) => {
+      console.log(`Checking ${user}`);
+      if (!recording[user]) await recordUser(user, recording, output);
+      else console.log(`Still recording ${user}`);
     };
-    checkUser();
+
+    Promise.all(users.map(checkUser)).then(() => {
+      console.log("All users checked");
+    }).catch((e) => {
+      console.error("Error checking users", e);
+    });
 
     setTimeout(watchUsersIter, 180000);
   };
 
-  watchUsersIter();
+  return watchUsersIter();
 }

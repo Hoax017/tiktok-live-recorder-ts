@@ -2,10 +2,16 @@
 
 Monitor and automatically record livestreams from TikTok
 
+## Ru without installation
+
+```
+deno run --allow-net --allow-write https://raw.githubusercontent.com/Hoax017/tiktok-live-recorder-ts/master/src/mod.ts '-u "Hoax017"'
+```
+
 ## Installation
 
 ```
-deno install --allow-net --allow-write -n tlr https://raw.githubusercontent.com/thefirstone265/tiktok-live-recorder/master/src/mod.ts
+deno install --allow-net --allow-write -n tlr https://raw.githubusercontent.com/Hoax017/tiktok-live-recorder-ts/master/src/mod.ts
 ```
 
 ## Usage

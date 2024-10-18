@@ -1,7 +1,7 @@
-import { parse } from './deps.ts';
-import usage from './usage.ts';
-import recordUser from './recordUser.ts';
-import watchUsers from './watchUsers.ts';
+import { parse } from "./deps.ts";
+import usage from "./usage.ts";
+import recordUser from "./recordUser.ts";
+import watchUsers from "./watchUsers.ts";
 
 if (import.meta.main) {
   const { args } = Deno;
@@ -16,27 +16,27 @@ if (import.meta.main) {
     usage(`"-u" and "-w" should not be used at the same time`);
     Deno.exit();
   }
-  if (output && typeof output !== 'string') {
-    usage('-o: output dir is not provided');
+  if (output && typeof output !== "string") {
+    usage("-o: output dir is not provided");
     Deno.exit();
   }
 
-  window.recording = {};
+  const recording: Recording = {};
 
   if (user) {
-    if (typeof user !== 'string') {
-      usage('-u: username is not provided');
+    if (typeof user !== "string") {
+      usage("-u: username is not provided");
       Deno.exit();
     }
-    recordUser(user, output);
+    await recordUser(user, recording, output);
   }
 
   if (users) {
-    if (typeof users !== 'string') {
-      usage('-w: user list is not provided');
+    if (typeof users !== "string") {
+      usage("-w: user list is not provided");
       Deno.exit();
     }
-    watchUsers(users, output);
+    await watchUsers(users, recording, output);
   }
 }
 
@@ -46,17 +46,17 @@ function validateArgs(
     // deno-lint-ignore no-explicit-any
     [x: string]: any;
     _: (string | number)[];
-  }
+  },
 ) {
-  const allowedOpts = ['h', 'help', 'u', 'user', 'w', 'watch', 'o', 'output'];
+  const allowedOpts = ["h", "help", "u", "user", "w", "watch", "o", "output"];
 
   if (args.length == 0) {
     usage();
     Deno.exit();
   }
 
-  Object.keys(parsedArgs).forEach(arg => {
-    if (arg == '_') return;
+  Object.keys(parsedArgs).forEach((arg) => {
+    if (arg == "_") return;
     if (!allowedOpts.includes(arg)) {
       usage(`bad option: -${arg}`);
       Deno.exit();
@@ -66,13 +66,5 @@ function validateArgs(
   if (parsedArgs.help || parsedArgs.h) {
     usage();
     Deno.exit();
-  }
-}
-
-declare global {
-  interface Window {
-    recording: {
-      [user: string]: boolean;
-    };
   }
 }

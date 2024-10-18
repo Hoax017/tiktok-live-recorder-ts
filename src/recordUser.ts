@@ -1,7 +1,10 @@
-import { writableStreamFromWriter } from './deps.ts';
-import { path } from './deps.ts';
+import { path, writableStreamFromWriter } from "./deps.ts";
 
-export default async function recordUser(user: string, output?: string) {
+export default async function recordUser(
+  user: string,
+  recording: Recording,
+  output?: string,
+) {
   const roomId = await getRoomId(user);
   if (!roomId) {
     console.error(`could not get roomId for ${user}`);
@@ -20,47 +23,54 @@ export default async function recordUser(user: string, output?: string) {
 
   const fileResponse = await fetch(url);
   if (fileResponse.body) {
-    window.recording[user] = true;
+    recording[user] = true;
     console.log(`Started recording ${user}...`);
 
-    const file = await Deno.open(filename(user, output), { write: true, create: true }).catch(
-      () => {
-        console.error('could not open output dir to write');
+    const file = await Deno.open(filename(user, output), {
+      write: true,
+      create: true,
+    }).catch(
+      (e) => {
+        console.error("could not open output dir to write", e);
         Deno.exit();
-      }
+      },
     );
     const writableStream = writableStreamFromWriter(file);
     await fileResponse.body.pipeTo(writableStream);
-    window.recording[user] = false;
+    recording[user] = false;
     console.log(`${user}'s stream ended`);
   }
 }
 
-async function getRoomId(user: string) {
+async function getRoomId(user: string): Promise<string | undefined> {
   return await fetch(`https://www.tiktok.com/@${user}/live`)
-    .then(res => res.text())
-    .then(text => {
-      const roomId = text.match(/room_id=(\d*)"/)?.[1];
-      return roomId;
+    .then((res) => res.text())
+    .then((text) => {
+      return text.match(/"roomId":"(\d+)"/)?.[1];
     });
 }
 
 async function isUserInLive(roomId: string): Promise<boolean | undefined> {
-  return await fetch(`https://www.tiktok.com/api/live/detail/?aid=1988&roomID=${roomId}`)
-    .then(res => res.json())
-    .then(json => json.LiveRoomInfo?.status != 4);
+  return await fetch(
+    `https://www.tiktok.com/api/live/detail/?aid=1988&roomID=${roomId}`,
+  )
+    .then((res) => res.json())
+    .then((json) => json.LiveRoomInfo?.status != 4);
 }
 
 async function getLiveUrl(roomId: string): Promise<string | undefined> {
-  return await fetch(`https://webcast.tiktok.com/webcast/room/info/?aid=1988&room_id=${roomId}`)
-    .then(res => res.json())
-    .then(json => json.data?.stream_url?.rtmp_pull_url);
+  return await fetch(
+    `https://webcast.tiktok.com/webcast/room/info/?aid=1988&room_id=${roomId}`,
+  )
+    .then((res) => res.json())
+    .then((json) => json.data?.stream_url?.rtmp_pull_url);
 }
 
 function filename(user: string, output?: string): string {
   const date = new Date();
-  const day = date.toISOString().slice(0, 10);
-  const time = date.toTimeString().slice(0, 8).replaceAll(':', '-');
+  // format: user_Y_m_d_time.flv
+  const day = date.toISOString().split("T")[0].replace(/-/g, "_");
+  const time = date.getTime();
   const file = `${user}_${day}_${time}.flv`;
   return output ? path.join(output, file) : file;
 }
