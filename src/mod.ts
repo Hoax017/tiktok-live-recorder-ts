@@ -10,12 +10,30 @@ if (import.meta.main) {
   validateArgs(args, parsedArgs);
 
   const user = parsedArgs.u || parsedArgs.user;
-  const users = parsedArgs.w || parsedArgs.watch;
+  const inputFile = parsedArgs.i || parsedArgs.input;
+  const rawUsers = parsedArgs.w || parsedArgs.watch;
   const output = parsedArgs.o || parsedArgs.output;
-  if (user && users) {
+  let users: string[] = [];
+
+  if (user && rawUsers) {
     usage(`"-u" and "-w" should not be used at the same time`);
     Deno.exit();
   }
+
+  // parse user file
+  if (typeof inputFile === "string") {
+    try {
+      const rawFileContent = new TextDecoder().decode(
+        await Deno.readFile(inputFile),
+      );
+      users = rawFileContent.split("\n").filter((e) => e && e.charAt(0) !== "#")
+        .map((e) => e.trim());
+    } catch (e) {
+      console.error(`could not read input file: ${inputFile}`, e);
+      Deno.exit();
+    }
+  }
+
   if (output && typeof output !== "string") {
     usage("-o: output dir is not provided");
     Deno.exit();
@@ -31,12 +49,20 @@ if (import.meta.main) {
     await recordUser(user, recording, output);
   }
 
-  if (users) {
-    if (typeof users !== "string") {
+  if (rawUsers) {
+    if (typeof rawUsers === "string") {
+      users = rawUsers.split(" ");
+    } else {
       usage("-w: user list is not provided");
+    }
+  }
+
+  if (users) {
+    if (!Array.isArray(users) || !users.length) {
+      usage("user list is empty");
       Deno.exit();
     }
-    await watchUsers(users, recording, output);
+    watchUsers(users, recording, output);
   }
 }
 
@@ -48,7 +74,18 @@ function validateArgs(
     _: (string | number)[];
   },
 ) {
-  const allowedOpts = ["h", "help", "u", "user", "w", "watch", "o", "output"];
+  const allowedOpts = [
+    "h",
+    "help",
+    "u",
+    "user",
+    "w",
+    "watch",
+    "o",
+    "output",
+    "i",
+    "input",
+  ];
 
   if (args.length == 0) {
     usage();

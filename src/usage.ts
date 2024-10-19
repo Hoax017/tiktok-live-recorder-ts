@@ -8,7 +8,9 @@ export default function usage(error?: string) {
   console.info("OPTIONS:");
   console.info("    -u, --user USER");
   console.info(`        Record a livestream from the username`);
-  console.info('    -w, --watch "USER1 USER2 ..."');
+  console.info(
+    '    -w, --watch "USER1 USER2 ...", -i, --input INPUT_FILE (one username per line)',
+  );
   console.info(
     `        Automatic live recording when a user from the provided list is in live`,
   );

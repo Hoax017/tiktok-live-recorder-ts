@@ -1,13 +1,12 @@
 import recordUser from "./recordUser.ts";
 
 export default function watchUsers(
-  usersString: string,
+  users: string[],
   recording: Recording,
   output?: string,
 ) {
   const watchUsersIter = () => {
     console.log("Checking users...");
-    const users = usersString.split(" ");
 
     const checkUser = async (user: string) => {
       console.log(`Checking ${user}`);
