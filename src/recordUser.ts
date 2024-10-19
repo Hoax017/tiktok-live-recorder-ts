@@ -21,8 +21,15 @@ export default async function recordUser(
     return;
   }
 
-  const fileResponse = await fetch(url);
-  if (fileResponse.body) {
+  let fileResponse = null;
+  try {
+    fileResponse = await fetch(url);
+  } catch (e) {
+    console.error(`could not fetch ${url}`, e);
+    return;
+  }
+
+  if (fileResponse?.body) {
     recording[user] = true;
     console.log(`Started recording ${user}...`);
 
