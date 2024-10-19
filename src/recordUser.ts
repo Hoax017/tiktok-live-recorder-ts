@@ -1,4 +1,4 @@
-import { ffmpeg, path, writableStreamFromWriter } from "./deps.ts";
+import {ffmpeg, path, writableStreamFromWriter} from "./deps.ts";
 
 export default async function recordUser(
   user: string,
@@ -95,7 +95,7 @@ async function convertFlvToMp4(
     return;
   }
   const videoRender = ffmpeg({ input, ffmpegDir: binary });
-  await videoRender.videoBitrate("1000k").save(output);
+  await videoRender.videoBitrate("1000k").videoCodec("libx264").audioCodec("mp3").save(output);
 
   console.log(`Conversion complete: ${output}`);
   console.log(`Removing flv file: ${input}`);

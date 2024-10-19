@@ -8,7 +8,7 @@ export default function watchUsers(
   debug?: boolean,
 ) {
   const watchUsersIter = () => {
-    console.log("Checking users...");
+    if (debug) console.log("Checking users...");
 
     const checkUser = async (user: string) => {
       if (debug) console.log(`Checking ${user}`);
