@@ -2,16 +2,16 @@
 
 Monitor and automatically record livestreams from TikTok
 
-## Ru without installation
+## Run without installation
 
-```
-deno run --allow-net --allow-write --allow-read https://raw.githubusercontent.com/Hoax017/tiktok-live-recorder-ts/master/src/mod.ts '-u "Hoax017"'
+```bash
+deno run --allow-net --allow-write --allow-run --allow-read https://raw.githubusercontent.com/Hoax017/tiktok-live-recorder-ts/master/src/mod.ts -u "Hoax017"
 ```
 
 ## Installation
 
-```
-deno install --allow-net --allow-write --allow-read -n tlr https://raw.githubusercontent.com/Hoax017/tiktok-live-recorder-ts/master/src/mod.ts
+```bash
+deno install --allow-net --allow-write --allow-run --allow-read -n tlr https://raw.githubusercontent.com/Hoax017/tiktok-live-recorder-ts/master/src/mod.ts
 ```
 
 ## Usage
@@ -26,8 +26,11 @@ OPTIONS:
         Automatic live recording when a user from the provided list is in live
     -o, --output OUTPUT
         Output directory
+    -c, --convert [optional ffmpeg_path]
+        Convert output flv files to mp4
     -h, --help
         Prints help information
+    -d, --debug
 ```
 
 ## Examples
@@ -49,3 +52,10 @@ Monitor users from a file and start recording when they start streaming
 ```
 tlr -i lives.list
 ```
+
+### Permissions
+
+- `--allow-net` to fetch the data from TikTok
+- `--allow-write` to save the video
+- `--allow-run` to run `ffmpeg`
+- `--allow-read` to read the input file

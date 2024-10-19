@@ -1,9 +1,11 @@
-import { path, writableStreamFromWriter } from "./deps.ts";
+import { ffmpeg, path, writableStreamFromWriter } from "./deps.ts";
 
 export default async function recordUser(
   user: string,
   recording: Recording,
+  convertMp4: string | boolean,
   output?: string,
+  debug?: boolean,
 ) {
   const roomId = await getRoomId(user);
   if (!roomId) {
@@ -17,7 +19,7 @@ export default async function recordUser(
   }
   const isLive = await isUserInLive(roomId);
   if (!isLive) {
-    console.log(`${user} is offline`);
+    if (debug) console.log(`${user} is offline`);
     return;
   }
 
@@ -30,10 +32,11 @@ export default async function recordUser(
   }
 
   if (fileResponse?.body) {
-    recording[user] = true;
     console.log(`Started recording ${user}...`);
+    recording[user] = filename(user, output);
 
-    const file = await Deno.open(filename(user, output), {
+    // open flv file to write
+    const file = await Deno.open(recording[user], {
       write: true,
       create: true,
     }).catch(
@@ -43,10 +46,78 @@ export default async function recordUser(
       },
     );
     const writableStream = writableStreamFromWriter(file);
-    await fileResponse.body.pipeTo(writableStream);
-    recording[user] = false;
+
+    // handle SIGINT
+    let aborted = false;
+    const controller = new AbortController();
+    const { signal } = controller;
+    const signalHandler = () => {
+      aborted = true;
+      controller.abort();
+    };
+    Deno.addSignalListener("SIGINT", signalHandler);
+
+    try {
+      // pipe response live to flv file
+      await fileResponse.body.pipeTo(writableStream, { signal });
+    } catch (e) {
+      Deno.removeSignalListener("SIGINT", signalHandler);
+      if (e instanceof Error && e.name === "AbortError") {
+        console.log(`Recording ${user} was aborted`);
+      } else {
+        throw e;
+      }
+    }
+
+    if (convertMp4) {
+      console.log(`Stopped recording ${user}, converting to mp4...`);
+      await convertFlvToMp4(
+        convertMp4,
+        recording[user],
+        recording[user].replace(/flv$/, "mp4"),
+      );
+    }
+    recording[user] = null;
     console.log(`${user}'s stream ended`);
+    if (aborted && !Object.values(recording).some((r) => r)) {
+      Deno.exit();
+    }
   }
+}
+
+async function convertFlvToMp4(
+  convertMp4: string | boolean,
+  input: string,
+  output: string,
+) {
+  const binary = await getFfmpegPath(convertMp4);
+  if (!binary) {
+    return;
+  }
+  const videoRender = ffmpeg({ input, ffmpegDir: binary });
+  await videoRender.videoBitrate("1000k").save(output);
+
+  console.log(`Conversion complete: ${output}`);
+  console.log(`Removing flv file: ${input}`);
+  await Deno.remove(input);
+}
+
+async function getFfmpegPath(
+  convertMp4: string | boolean,
+): Promise<string | null> {
+  if (typeof convertMp4 !== "boolean") {
+    return convertMp4;
+  }
+  const process = new Deno.Command("which", { args: ["ffmpeg"] });
+  const { stdout, success } = await process.output();
+  if (!success) {
+    console.error(
+      "ffmpeg not found in PATH try providing the path manually with -c [path]",
+    );
+    return null;
+  }
+  const path = new TextDecoder().decode(stdout);
+  return path.trim();
 }
 
 async function getRoomId(user: string): Promise<string | undefined> {

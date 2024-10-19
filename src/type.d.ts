@@ -1,3 +1,3 @@
 type Recording = {
-  [user: string]: boolean;
+  [user: string]: null | string;
 };
