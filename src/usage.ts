@@ -16,7 +16,11 @@ export default function usage(error?: string) {
   );
   console.info("    -o, --output OUTPUT");
   console.info(`        Output directory`);
+  console.info("    -c, --convert [optional ffmpeg_path]");
+  console.info(`        Convert output flv files to mp4`);
   console.info("    -h, --help");
   console.info("        Prints help information");
+  console.info("    -d, --debug");
+
   Deno.exit();
 }

@@ -13,7 +13,9 @@ if (import.meta.main) {
   const inputFile = parsedArgs.i || parsedArgs.input;
   const rawUsers = parsedArgs.w || parsedArgs.watch;
   const output = parsedArgs.o || parsedArgs.output;
-  let users: string[] = [];
+  const convertMp4: string | boolean = parsedArgs.c || parsedArgs.convert;
+  const debug: boolean = !!(parsedArgs.d || parsedArgs.debug);
+  let users: string[] | null = null;
 
   if (user && rawUsers) {
     usage(`"-u" and "-w" should not be used at the same time`);
@@ -46,7 +48,7 @@ if (import.meta.main) {
       usage("-u: username is not provided");
       Deno.exit();
     }
-    await recordUser(user, recording, output);
+    await recordUser(user, recording, convertMp4, output, debug);
   }
 
   if (rawUsers) {
@@ -62,7 +64,7 @@ if (import.meta.main) {
       usage("user list is empty");
       Deno.exit();
     }
-    watchUsers(users, recording, output);
+    watchUsers(users, recording, convertMp4, output, debug);
   }
 }
 
@@ -85,6 +87,10 @@ function validateArgs(
     "output",
     "i",
     "input",
+    "c",
+    "convert",
+    "d",
+    "debug",
   ];
 
   if (args.length == 0) {
