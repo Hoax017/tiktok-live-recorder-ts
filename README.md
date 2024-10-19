@@ -10,9 +10,15 @@ deno run --allow-net --allow-write --allow-run --allow-read https://raw.githubus
 
 ## Installation
 
+### Using beta version
+
 ```bash
 deno install --allow-net --allow-write --allow-run --allow-read -n tlr https://raw.githubusercontent.com/Hoax017/tiktok-live-recorder-ts/master/src/mod.ts
 ```
+
+### Using stable version
+
+https://github.com/Hoax017/tiktok-live-recorder-ts/releases/latest
 
 ## Usage
 
